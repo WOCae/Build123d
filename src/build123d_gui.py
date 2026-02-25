@@ -272,7 +272,7 @@ def test_connection(provider):
 # ══════════════════════════════════════════════════════════════
 def display_dashboard():
     """完全なBuild123d × LLMダッシュボードを表示する"""
-    _ensure_deps()
+    # _ensure_deps()
 
     # ── スタイル ──────────────────────────────────────────────
     display(HTML("""
