@@ -6,9 +6,8 @@ gui/utils/code_utils.py
 import re
 import ast
 import traceback
-from typing import Tuple
+from typing import Tuple, Any
 from gui.state import BANNED
-
 
 def extract_code(text: str) -> str:
     """LLMの返答からPythonコードブロックを確実に抽出する。"""
@@ -19,7 +18,6 @@ def extract_code(text: str) -> str:
     if m:
         return m.group(1).strip()
     return ''
-
 
 def validate_code_block(code: str, raw_response: str) -> Tuple[bool, str]:
     """コードブロックの基本的な妥当性を検証する。"""
@@ -35,11 +33,9 @@ def validate_code_block(code: str, raw_response: str) -> Tuple[bool, str]:
         )
     return True, ''
 
-
 def safety_check(code: str) -> list[str]:
     """禁止パターンを検出して返す。"""
     return [b for b in BANNED if b in code]
-
 
 def auto_patch(code: str) -> Tuple[str, list[str]]:
     """LLMがよく間違えるパターンを実行前に自動修正する。"""
@@ -66,19 +62,10 @@ def auto_patch(code: str) -> Tuple[str, list[str]]:
         code = re.sub(r'\.filter_by_orientation\([^)]*\)', '', code)
         patches.append('  .filter_by_orientation(...) → 削除（存在しないメソッド）')
 
-    if '.filter_by_axis' in code:
-        code = re.sub(r'\.filter_by_axis\([^)]*\)', '', code)
-        patches.append('  .filter_by_axis(...) → 削除（存在しないメソッド）')
-
-    if '.filter_by_type' in code:
-        code = re.sub(r'\.filter_by_type\([^)]*\)', '', code)
-        patches.append('  .filter_by_type(...) → 削除（すべてのエッジ対象に変更）')
-
     return code, patches
 
-
-def run_code(code: str) -> Tuple[bool, str]:
-    """コードを安全にチェックして実行する。"""
+def run_code(code: str) -> Tuple[bool, str, Any]:
+    """コードを安全にチェックして実行し、生成されたオブジェクトを返す。"""
     code, patches = auto_patch(code)
     if patches:
         print('🔧 自動修正を適用しました:')
@@ -87,13 +74,23 @@ def run_code(code: str) -> Tuple[bool, str]:
 
     dangers = safety_check(code)
     if dangers:
-        return False, f'安全チェックNG: {dangers}'
+        return False, f'安全チェックNG: {dangers}', None
     try:
         ast.parse(code)
     except SyntaxError as e:
-        return False, f'構文エラー: {e}'
+        return False, f'構文エラー: {e}', None
+
+    loc = {}
     try:
-        exec(compile(code, '<llm_generated>', 'exec'), {'__builtins__': __builtins__})
-        return True, ''
+        # 実行
+        exec(compile(code, '<llm_generated>', 'exec'), {'__builtins__': __builtins__}, loc)
+        
+        # BuildPart オブジェクトを探す
+        last_obj = None
+        for v in loc.values():
+            if hasattr(v, 'part'):
+                last_obj = v
+        
+        return True, '', last_obj
     except Exception:
-        return False, traceback.format_exc()
+        return False, traceback.format_exc(), None

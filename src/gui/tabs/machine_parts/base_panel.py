@@ -1,7 +1,7 @@
 """
 gui/tabs/machine_parts/base_panel.py
 ────────────────
-機械部品パネルの共通基底クラス。
+機械部品パネルの共通基底クラス（ocp_cad_viewer 対応版）。
 """
 from abc import ABC, abstractmethod
 from typing import Tuple
@@ -29,7 +29,7 @@ class MachinePartPanel(ABC):
     def _run(self, label: str) -> None:
         """_build_code() を実行し、ログ・ビューア・コードを更新する共通処理"""
         from gui.utils.code_utils import run_code
-        from gui.utils.viewer import _find_latest_stl, _show_viewer
+        from gui.utils.viewer import _show_viewer
 
         code = self._build_code()
         self.code_out.clear_output()
@@ -39,15 +39,15 @@ class MachinePartPanel(ABC):
         with self.code_out:
             display(HTML(f'<div class="cad-code">{code}</div>'))
         with self.log_out:
-            print(f'▶ {label} を実行中...')
+            print(f'▶ {label} を生成中...')
 
-        ok, err = run_code(code)
+        # オブジェクトを受け取るように修正
+        ok, err, obj = run_code(code)
         if ok:
             with self.log_out:
-                print('✅ 生成完了！  output/ フォルダを確認してください。')
-            stl = _find_latest_stl(code)
-            if stl:
-                _show_viewer(stl, self.viewer_out)
+                print('✅ 生成完了')
+            # 直接表示
+            _show_viewer(obj, self.viewer_out)
         else:
             with self.log_out:
                 print(f'❌ エラー:\n{err}')

@@ -1,14 +1,14 @@
 """
 gui/tabs/auto_generation_tab.py
 ────────────────
-API自動生成タブのUI生成。
+API自動生成タブのUI生成（ocp_cad_viewer 対応版）。
 """
 import ipywidgets as w
 from IPython.display import display, HTML
 from gui.state import AppState
 from gui.api import get_api_client
 from gui.utils.code_utils import extract_code, validate_code_block, run_code
-from gui.utils.viewer import _find_latest_stl, _show_viewer
+from gui.utils.viewer import _show_viewer
 
 
 def create_auto_generation_tab(state: AppState) -> w.VBox:
@@ -65,32 +65,25 @@ def create_auto_generation_tab(state: AppState) -> w.VBox:
             valid, verr = validate_code_block(code, raw)
             if not valid:
                 log(f'⚠️ コード抽出失敗:\n{verr}')
-                log('💡 リトライします...')
-                fix_req = ('コードブロック(```python ... ```)のみを返してください。\n'
-                           f'元のリクエスト: {req}')
-                raw = client.generate(fix_req, [])
-                code = extract_code(raw)
-                valid, verr = validate_code_block(code, raw)
-                if not valid:
-                    log(f'❌ 再試行後もコード抽出失敗:\n{verr}')
-                    return
+                return
 
             state.last_code = code
             show_code(code)
-            ok, err = run_code(code)
+            
+            # オブジェクトを受け取るように修正
+            ok, err, obj = run_code(code)
             state.last_err = err
+            
             if ok:
-                log('✅ 実行成功！ output/llm_output.step / .stl を確認してください')
+                log('✅ 実行成功！')
                 state.history += [
                     {'role': 'user',      'content': req},
                     {'role': 'assistant', 'content': raw},
                 ]
-                stl = _find_latest_stl(code)
-                if stl:
-                    _show_viewer(stl, viewer_out)
+                # ocp_cad_viewer で表示
+                _show_viewer(obj, viewer_out)
             else:
                 log(f'❌ 実行エラー:\n{err}')
-                log('💡 「リトライ」ボタンで自動修正を試みます')
                 retry_btn.disabled = False
         except Exception as e:
             log(f'⛔ API呼び出しエラー: {e}')
@@ -119,16 +112,13 @@ def create_auto_generation_tab(state: AppState) -> w.VBox:
                 break
             cur_code = extract_code(raw)
             show_code(cur_code)
-            ok, cur_err = run_code(cur_code)
+            ok, cur_err, obj = run_code(cur_code)
             if ok:
                 log(f'✅ リトライ {n} 回目で成功！')
                 state.last_code = cur_code
                 state.last_err  = ''
                 retry_btn.disabled = True
-                stl = _find_latest_stl(cur_code)
-                if stl:
-                    viewer_out.clear_output()
-                    _show_viewer(stl, viewer_out)
+                _show_viewer(obj, viewer_out)
                 break
             log(f'❌ まだエラー ({n}回目)')
             hist += [{'role': 'user', 'content': fix}, {'role': 'assistant', 'content': raw}]
@@ -156,7 +146,7 @@ def create_auto_generation_tab(state: AppState) -> w.VBox:
                layout=w.Layout(gap='8px', align_items='center')),
         w.HTML('<b style="margin-top:6px">ログ</b>'),
         log_out,
-        w.HTML('<b>🖥️ 3Dビューア</b>'),
+        w.HTML('<b>🖥️ 3Dビューア (ocp_cad_viewer)</b>'),
         viewer_out,
         w.HTML('<b>生成コード</b>'),
         code_out,
