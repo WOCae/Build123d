@@ -1,8 +1,4 @@
-"""
-gui/utils/viewer.py
-────────────────
-VS Code 拡張機能 (ocp_vscode) 連携版。
-"""
+
 import os
 import ipywidgets as w
 from IPython.display import display
@@ -13,24 +9,17 @@ def _show_viewer(obj, out_widget):
         with out_widget:
             print("⚠️ 表示するオブジェクトがありません。")
         return
-
     try:
-        # BuildPart等から形状を抽出
         target = obj.part if hasattr(obj, 'part') else obj
-        
-        # VS Code のサイドパネル (OCP CAD Viewer) にモデルを送信！
+        # VS Code の OCP CAD Viewer にモデルを送信
         from ocp_vscode import show
         show(target)
-        
         with out_widget:
             print("✅ VS Code の「OCP CAD Viewer」タブにモデルを送信しました！")
             print("👉 画面右側（または別タブ）のビューアーを確認してください。")
-            
     except Exception as e:
         with out_widget:
             print(f"⚠️ ocp_vscode 送信エラー: {e}")
             print("💡 VS Code の OCP CAD Viewer 拡張機能が起動しているか確認してください。")
 
-def _find_latest_stl(code):
-    """互換性維持のためのダミー関数"""
-    return None
+def _find_latest_stl(code): return None
