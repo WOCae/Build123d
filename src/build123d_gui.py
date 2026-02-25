@@ -48,7 +48,7 @@ def _ensure_deps():
 # ══════════════════════════════════════════════════════════════
 state = dict(
     llm_mode        = 'manual',
-    provider        = 'anthropic',
+    provider        = 'google',
     anthropic_key   = '',
     openai_key      = '',
     google_key      = '',
@@ -298,8 +298,8 @@ def display_dashboard():
         style={'button_width':'150px','description_width':'80px'})
 
     provider_toggle = w.ToggleButtons(
-        options=[('🟣 Anthropic','anthropic'),('🟢 OpenAI','openai'),('🔵 Google','google')],
-        value='anthropic', description='プロバイダー:',
+        options=[('🔵 Google','google'), ('🟣 Anthropic','anthropic'), ('🟢 OpenAI','openai')], # ←順番を変更
+        value='google', description='プロバイダー:', # ←初期値をgoogleに変更
         style={'button_width':'130px','description_width':'90px'})
 
     # Anthropic
@@ -347,7 +347,7 @@ def display_dashboard():
         w.HBox([goo_test, goo_stat], layout=w.Layout(align_items='center', gap='10px')),
     ], layout=w.Layout(padding='8px 4px'))
 
-    provider_area = w.VBox([ant_box])
+    provider_area = w.VBox([goo_box]) 
 
     def on_provider_change(change=None):
         p = provider_toggle.value
