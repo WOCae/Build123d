@@ -16,6 +16,75 @@ class MachinePartPanel(ABC):
     viewer_out: w.Output
     code_out: w.Output
 
+    # ────────────────────────────────────────────────────────
+    # ヘルパー: UIパーツ生成
+    # ────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _section(title: str) -> w.HTML:
+        """セクションタイトルを返す"""
+        return w.HTML(
+            f'<div style="font-size:14px;font-weight:700;'
+            f'border-bottom:2px solid #4f8cff;padding-bottom:4px;'
+            f'margin-bottom:8px;margin-top:4px">{title}</div>'
+        )
+
+    @staticmethod
+    def _slider(
+        label: str,
+        value: float,
+        min_v: float,
+        max_v: float,
+        step: float,
+        unit: str = '',
+    ) -> Tuple[w.HBox, w.FloatSlider]:
+        """ラベル付き FloatSlider を (HBox, slider) で返す"""
+        slider = w.FloatSlider(
+            value=value, min=min_v, max=max_v, step=step,
+            readout_format='.2f',
+            layout=w.Layout(width='320px'),
+            style={'description_width': '0px'},
+        )
+        lbl = w.Label(
+            f'{label}',
+            layout=w.Layout(width='130px', justify_content='flex-end'),
+        )
+        unit_lbl = w.Label(unit, layout=w.Layout(width='36px'))
+        row = w.HBox(
+            [lbl, slider, unit_lbl],
+            layout=w.Layout(align_items='center', gap='6px', margin='2px 0'),
+        )
+        return row, slider
+
+    @staticmethod
+    def _int_slider(
+        label: str,
+        value: int,
+        min_v: int,
+        max_v: int,
+        unit: str = '',
+    ) -> Tuple[w.HBox, w.IntSlider]:
+        """ラベル付き IntSlider を (HBox, slider) で返す"""
+        slider = w.IntSlider(
+            value=value, min=min_v, max=max_v, step=1,
+            layout=w.Layout(width='320px'),
+            style={'description_width': '0px'},
+        )
+        lbl = w.Label(
+            f'{label}',
+            layout=w.Layout(width='130px', justify_content='flex-end'),
+        )
+        unit_lbl = w.Label(unit, layout=w.Layout(width='36px'))
+        row = w.HBox(
+            [lbl, slider, unit_lbl],
+            layout=w.Layout(align_items='center', gap='6px', margin='2px 0'),
+        )
+        return row, slider
+
+    # ────────────────────────────────────────────────────────
+    # 抽象メソッド（各パネルで実装）
+    # ────────────────────────────────────────────────────────
+
     @abstractmethod
     def _build_code(self) -> str:
         """スライダー値から実行コードを組み立てて返す"""
@@ -26,61 +95,43 @@ class MachinePartPanel(ABC):
         """タブに追加するウィジェットを返す"""
         ...
 
+    # ────────────────────────────────────────────────────────
+    # 共通: コード生成 → 実行 → ビューア表示
+    # ────────────────────────────────────────────────────────
+
     def _run(self, label: str) -> None:
-        """_build_code() を実行し、ログ・ビューア・コードを更新する共通処理"""
+        import traceback
         from gui.utils.code_utils import run_code
         from gui.utils.viewer import _show_viewer
 
-        code = self._build_code()
+        # 画面をリセット
+        self.log_out.clear_output()
         self.code_out.clear_output()
         self.viewer_out.clear_output()
-        self.log_out.clear_output()
 
-        with self.code_out:
-            display(HTML(f'<div class="cad-code">{code}</div>'))
-        with self.log_out:
-            print(f'▶ {label} を生成中...')
-
-        # オブジェクトを受け取るように修正
-        ok, err, obj = run_code(code)
-        if ok:
+        try:
             with self.log_out:
-                print('✅ 生成完了')
-            # 直接表示
-            _show_viewer(obj, self.viewer_out)
-        else:
+                print(f'▶ {label} のコードを生成中...')
+
+            code = self._build_code()
+
+            with self.code_out:
+                display(HTML(f'<div class="cad-code">{code}</div>'))
+
             with self.log_out:
-                print(f'❌ エラー:\n{err}')
+                print(f'▶ {label} を実行中...')
 
-    @staticmethod
-    def _slider(
-        desc: str, val: float, mn: float, mx: float, step: float, unit: str = 'mm'
-    ) -> Tuple[w.HBox, w.FloatSlider]:
-        label  = w.Label(f'{desc}:', layout=w.Layout(width='160px'))
-        slider = w.FloatSlider(
-            value=val, min=mn, max=mx, step=step,
-            readout_format='.1f',
-            layout=w.Layout(width='260px')
-        )
-        unit_l = w.Label(unit, layout=w.Layout(width='36px'))
-        return w.HBox([label, slider, unit_l]), slider
+            ok, err, obj = run_code(code)
 
-    @staticmethod
-    def _int_slider(
-        desc: str, val: int, mn: int, mx: int, unit: str = ''
-    ) -> Tuple[w.HBox, w.IntSlider]:
-        label  = w.Label(f'{desc}:', layout=w.Layout(width='160px'))
-        slider = w.IntSlider(
-            value=val, min=mn, max=mx,
-            layout=w.Layout(width='260px')
-        )
-        unit_l = w.Label(unit, layout=w.Layout(width='36px'))
-        return w.HBox([label, slider, unit_l]), slider
+            self.log_out.clear_output()
+            with self.log_out:
+                if ok:
+                    print('✅ 生成成功！ビューアーに送信します。')
+                    _show_viewer(obj, self.viewer_out)
+                else:
+                    print(f'❌ 【実行エラー】:\n{err}')
 
-    @staticmethod
-    def _section(title: str) -> w.HTML:
-        return w.HTML(
-            f'<div style="font-size:14px;font-weight:700;'
-            f'margin:12px 0 6px;border-bottom:2px solid #4a90d9;'
-            f'padding-bottom:4px;color:#1a3a5c">{title}</div>'
-        )
+        except Exception:
+            self.log_out.clear_output()
+            with self.log_out:
+                print(f'💥 【システムエラー（強制キャッチ）】:\n{traceback.format_exc()}')

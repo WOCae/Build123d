@@ -68,7 +68,7 @@ with BuildPart() as nut:
 
     # ── 内ねじ山（revolve Subtract）──
     with BuildSketch(Plane.XZ) as sk_thread:
-        Polygon([Vector(x, z) for x, z in profile_pts], align=None)
+        make_face(Polyline([Vector(x, z) for x, z in profile_pts], close=True))
     revolve(axis=Axis.Z, revolution_arc=360, mode=Mode.SUBTRACT)
 
     # ── 面取り（両端）──
@@ -78,6 +78,7 @@ with BuildPart() as nut:
 
 export_step(nut.part, 'output/hex_nut.step')
 export_stl(nut.part,  'output/hex_nut.stl')
+show_object = nut
 print(f'✅ 六角ナット M{{d:.0f}}  H={{H}}mm  二面幅={{key_s}}mm')
 print(f'   → output/hex_nut.step / .stl')
 """

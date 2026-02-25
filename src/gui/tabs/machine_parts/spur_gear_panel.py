@@ -120,7 +120,7 @@ for i in range(z):
 # ── ビルド ──
 with BuildPart() as gear:
     with BuildSketch(Plane.XY) as sk:
-        Polygon([Vector(x, y) for x, y in all_pts], align=None)
+        Polygon([Vector(x, y) for x, y in all_pts])
     extrude(amount=b)
 
     if hub_d > 0:
@@ -136,6 +136,7 @@ with BuildPart() as gear:
 
 export_step(gear.part, 'output/spur_gear.step')
 export_stl(gear.part,  'output/spur_gear.stl')
+show_object = gear
 print(f'✅ 平歯車 m={{m}} z={{z}} b={{b}}mm')
 print(f'   基準円径: {{m*z:.2f}}mm  歯先円径: {{ra*2:.2f}}mm')
 print(f'   → output/spur_gear.step / .stl')

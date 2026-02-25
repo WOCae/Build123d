@@ -90,11 +90,12 @@ with BuildPart() as pulley:
                 Vector(ro + 1,        z_pos + groove_top_w / 2),
                 Vector(ro + 1,        z_pos - groove_top_w / 2),
             ]
-            Polygon(pts, align=None)
+            make_face(Polyline(pts, close=True))
         revolve(axis=Axis.Z, revolution_arc=360, mode=Mode.SUBTRACT)
 
 export_step(pulley.part, 'output/v_pulley.step')
 export_stl(pulley.part,  'output/v_pulley.stl')
+show_object = pulley
 print(f'✅ Vプーリー φ{{outer_d}} 幅{{pwidth}}mm {{n_grooves}}溝')
 print(f'   → output/v_pulley.step / .stl')
 """

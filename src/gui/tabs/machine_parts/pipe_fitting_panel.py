@@ -90,6 +90,7 @@ with BuildPart() as elbow:
 
 export_step(elbow.part, 'output/pipe_elbow.step')
 export_stl(elbow.part,  'output/pipe_elbow.stl')
+show_object = elbow
 print(f'✅ パイプ継手 φ{{outer_d}}×t{{wall_t}} R={{bend_R}}mm {{angle}}°')
 print(f'   → output/pipe_elbow.step / .stl')
 """

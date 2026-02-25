@@ -116,11 +116,11 @@ def create_manual_tab() -> w.VBox:
         with paste_log_out:
             print('▶ 実行中...')
 
-        ok, err = run_code(code)
+        ok, err, obj = run_code(code)
         if ok:
             with paste_log_out:
                 print('✅ 実行成功！output/llm_output.step / .stl を確認してください')
-            stl = _find_latest_stl(code)
+            stl = obj
             if stl:
                 _show_viewer(stl, paste_viewer_out)
         else:

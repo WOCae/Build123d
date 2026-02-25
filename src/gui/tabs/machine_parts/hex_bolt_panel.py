@@ -78,7 +78,7 @@ profile_pts = (
 with BuildPart() as bolt:
     # ── 軸部 + ねじ山（revolve）──
     with BuildSketch(Plane.XZ) as sk_shaft:
-        Polygon([Vector(x, z) for x, z in profile_pts], align=None)
+        make_face(Polyline([Vector(x, z) for x, z in profile_pts], close=True))
     revolve(axis=Axis.Z, revolution_arc=360)
 
     # ── 頭部（六角柱）──
@@ -94,6 +94,7 @@ with BuildPart() as bolt:
 
 export_step(bolt.part, 'output/hex_bolt.step')
 export_stl(bolt.part,  'output/hex_bolt.stl')
+show_object = bolt
 print(f'✅ 六角ボルト M{{d:.0f}}×{{L:.0f}}  p={{pitch}}mm')
 print(f'   頭部高: {{head_h}}mm  二面幅: {{key_s}}mm')
 print(f'   → output/hex_bolt.step / .stl')

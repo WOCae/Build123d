@@ -236,11 +236,11 @@ def create_samples_tab() -> w.VBox:
             display(HTML(f'<div class="cad-code">{code}</div>'))
         with sample_log_out:
             print(f'▶ {label} を実行中...')
-        ok, err = run_code(code)
+        ok, err, obj = run_code(code)
         if ok:
             with sample_log_out:
                 print('✅ 生成完了！  output/ フォルダを確認してください。')
-            stl = _find_latest_stl(code)
+            stl = obj
             if stl:
                 _show_viewer(stl, sample_viewer_out)
         else:
