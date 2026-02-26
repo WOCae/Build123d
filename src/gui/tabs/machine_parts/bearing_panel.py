@@ -108,7 +108,9 @@ for part, name in [
 ]:
     export_step(part.part, f'output/{{name}}.step')
     export_stl(part.part,  f'output/{{name}}.stl')
-show_object = [v for k, v in locals().items() if k in ("outer_ring", "inner_ring", "balls", "cage", "cage_parts")]
+
+# 全パーツをリストでビューアに渡す（ocp_vscode.show は複数オブジェクト対応）
+show_object = [outer_ring, inner_ring, balls, cage]
 
 print(f'✅ 深溝玉軸受  内径{{inner_d}}×外径{{outer_d}}×幅{{width}}mm')
 print(f'   ボール {{n_balls}}個 φ{{ball_d}}mm')

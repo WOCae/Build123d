@@ -80,17 +80,20 @@ def run_code(code: str) -> Tuple[bool, str, Any]:
     except SyntaxError as e:
         return False, f'構文エラー: {e}', None
 
-    loc = {}
+    # ── exec の名前空間を共有する（globals == locals）──
+    # globals と locals を同一辞書にすることで、コード内で定義した
+    # 関数・クラスが互いを参照できるようになる（math 等の import も共有）
+    ns = {'__builtins__': __builtins__}
     try:
-        # 実行
-        exec(compile(code, '<llm_generated>', 'exec'), {'__builtins__': __builtins__}, loc)
-        
-        # BuildPart オブジェクトを探す
-        last_obj = None
-        for v in loc.values():
-            if hasattr(v, 'part'):
-                last_obj = v
-        
+        exec(compile(code, '<llm_generated>', 'exec'), ns)
+
+        # show_object 変数を優先、なければ BuildPart を探す
+        last_obj = ns.get('show_object', None)
+        if last_obj is None:
+            for v in ns.values():
+                if hasattr(v, 'part'):
+                    last_obj = v
+
         return True, '', last_obj
     except Exception:
         return False, traceback.format_exc(), None

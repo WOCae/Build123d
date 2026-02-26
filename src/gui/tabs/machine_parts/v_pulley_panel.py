@@ -90,7 +90,9 @@ with BuildPart() as pulley:
                 Vector(ro + 1,        z_pos + groove_top_w / 2),
                 Vector(ro + 1,        z_pos - groove_top_w / 2),
             ]
-            make_face(Polyline(pts, close=True))
+            with BuildLine() as ln:
+                Polyline(pts, close=True)
+            make_face()
         revolve(axis=Axis.Z, revolution_arc=360, mode=Mode.SUBTRACT)
 
 export_step(pulley.part, 'output/v_pulley.step')

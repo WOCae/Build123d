@@ -47,7 +47,7 @@ class MachinePartPanel(ABC):
         )
         lbl = w.Label(
             f'{label}',
-            layout=w.Layout(width='130px', justify_content='flex-end'),
+            layout=w.Layout(width='130px'),
         )
         unit_lbl = w.Label(unit, layout=w.Layout(width='36px'))
         row = w.HBox(
@@ -72,7 +72,7 @@ class MachinePartPanel(ABC):
         )
         lbl = w.Label(
             f'{label}',
-            layout=w.Layout(width='130px', justify_content='flex-end'),
+            layout=w.Layout(width='130px'),
         )
         unit_lbl = w.Label(unit, layout=w.Layout(width='36px'))
         row = w.HBox(
